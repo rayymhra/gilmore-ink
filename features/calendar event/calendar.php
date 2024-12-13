@@ -15,15 +15,18 @@ $last_day = date('Y-m-t', strtotime($first_day));
 $days_in_month = date('t', strtotime($first_day));
 
 // Fetch events for the current month
-$query = $pdo->prepare("SELECT * FROM events WHERE user_id = ? AND date BETWEEN ? AND ?");
-$query->execute([$user_id, $first_day, $last_day]);
-$events = $query->fetchAll(PDO::FETCH_ASSOC);
+// Fetch events for the current month
+$query = $conn->prepare("SELECT * FROM events WHERE user_id = ? AND date BETWEEN ? AND ?");
+$query->bind_param("sss", $user_id, $first_day, $last_day);
+$query->execute();
+$result = $query->get_result();
 
 // Organize events by date
 $events_by_date = [];
-foreach ($events as $event) {
+while ($event = $result->fetch_assoc()) {
     $events_by_date[$event['date']][] = $event;
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,27 +40,62 @@ foreach ($events as $event) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-4">Calendar - <?php echo date('F Y', strtotime($first_day)); ?></h1>
-        <div class="calendar-grid">
-            <?php
-            for ($day = 1; $day <= $days_in_month; $day++) {
-                $current_date = date('Y-m-d', strtotime("$year-$month-$day"));
-                ?>
-                <div class="calendar-cell" data-date="<?php echo $current_date; ?>">
-                    <span><?php echo $day; ?></span>
-                    <?php if (isset($events_by_date[$current_date])): ?>
-                        <ul>
-                            <?php foreach ($events_by_date[$current_date] as $event): ?>
-                                <li><?php echo $event['title']; ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-                <?php
-            }
-            ?>
+<div class="container mt-4">
+        <h1>Calendar - <?php echo date('F Y', strtotime($first_day)); ?></h1>
+        <div class="d-flex justify-content-between mb-3">
+            <a href="?month=<?php echo $month - 1; ?>&year=<?php echo $year; ?>" class="btn btn-primary">Previous</a>
+            <a href="?month=<?php echo $month + 1; ?>&year=<?php echo $year; ?>" class="btn btn-primary">Next</a>
         </div>
+
+        <!-- Calendar Table -->
+        <table class="table table-bordered text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>Sunday</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Start the calendar from the first day of the month
+                $start_day = date('w', strtotime($first_day));
+                $current_day = 1;
+
+                // Print rows for the weeks
+                for ($week = 0; $week < 6; $week++) {
+                    echo "<tr>";
+
+                    // Print each day in the week
+                    for ($day = 0; $day < 7; $day++) {
+                        if ($week === 0 && $day < $start_day || $current_day > $days_in_month) {
+                            echo "<td></td>"; // Empty cell
+                        } else {
+                            $current_date = date('Y-m-d', strtotime("$year-$month-$current_day"));
+                            echo "<td class='calendar-cell' data-date='$current_date'>";
+                            echo "<strong>$current_day</strong>";
+                            if (isset($events_by_date[$current_date])) {
+                                echo "<ul class='list-unstyled'>";
+                                foreach ($events_by_date[$current_date] as $event) {
+                                    echo "<li class='badge bg-info mt-1'>{$event['title']}</li>";
+                                }
+                                echo "</ul>";
+                            }
+                            echo "</td>";
+                            $current_day++;
+                        }
+                    }
+
+                    echo "</tr>";
+                    if ($current_day > $days_in_month) break;
+                }
+                ?>
+            </tbody>
+        </table>
     </div>
 
     <!-- Modal for Adding Event -->
@@ -107,7 +145,7 @@ foreach ($events as $event) {
         $('#eventForm').on('submit', function (e) {
             e.preventDefault();
             $.ajax({
-                url: 'modules/add_event.php',
+                url: 'add_event.php',
                 type: 'POST',
                 data: $(this).serialize(),
                 success: function (response) {
