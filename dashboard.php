@@ -3,7 +3,8 @@ include "includes/koneksi.php";
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    // echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    echo json_encode(['success' => false]);
     exit;
 }
 
@@ -180,15 +181,16 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
 
 <body>
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
+    <!-- <div class="sidebar" id="sidebar">
         <div class="toggle-btn" onclick="toggleSidebar()">&#9776;</div>
         <nav class="nav flex-column">
-            <a class="nav-link active" href="#">Dashboard</a>
-            <a class="nav-link" href="#">Tasks</a>
+            <a class="nav-link active" href="">Dashboard</a>
+            <a class="nav-link" href="features/habit.php">Habit tracker</a>
             <a class="nav-link" href="#">Calendar</a>
             <a class="nav-link" href="#">Notes</a>
         </nav>
-    </div>
+    </div> -->
+    <?php include 'includes/sidebar.php'; ?>
 
     <!-- Content -->
     <div class="content" id="content">

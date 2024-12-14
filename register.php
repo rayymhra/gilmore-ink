@@ -29,15 +29,15 @@
 ?>
 
 <?php
-include "../../includes/koneksi.php";
+include "includes/koneksi.php";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT); // Encrypt password
     $email = mysqli_real_escape_string($conn, $_POST['email']);
 
-    // Insert new user into the users table
-    $query = "INSERT INTO users (username, password, email) VALUES ('$username', '$password', '$email')";
+    // Insert new user into the user table
+    $query = "INSERT INTO user (username, password, email) VALUES ('$username', '$password', '$email')";
     $result = mysqli_query($conn, $query);
 
     if ($result) {
