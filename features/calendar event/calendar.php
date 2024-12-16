@@ -44,8 +44,25 @@ while ($event = $result->fetch_assoc()) {
     <div class="container mt-4">
         <h1>Calendar - <?php echo date('F Y', strtotime($first_day)); ?></h1>
         <div class="d-flex justify-content-between mb-3">
-            <a href="?month=<?php echo $month - 1; ?>&year=<?php echo $year; ?>" class="btn btn-primary">Previous</a>
-            <a href="?month=<?php echo $month + 1; ?>&year=<?php echo $year; ?>" class="btn btn-primary">Next</a>
+            <?php
+            $prev_month = $month - 1;
+            $next_month = $month + 1;
+            $prev_year = $year;
+            $next_year = $year;
+
+            if ($prev_month < 1) {
+                $prev_month = 12;
+                $prev_year--;
+            }
+
+            if ($next_month > 12) {
+                $next_month = 1;
+                $next_year++;
+            }
+            ?>
+            <a href="?month=<?php echo $prev_month; ?>&year=<?php echo $prev_year; ?>" class="btn btn-primary">Previous</a>
+            <a href="?month=<?php echo $next_month; ?>&year=<?php echo $next_year; ?>" class="btn btn-primary">Next</a>
+
         </div>
 
         <!-- Calendar Table -->
@@ -82,13 +99,16 @@ while ($event = $result->fetch_assoc()) {
                             if (isset($events_by_date[$current_date])) {
                                 echo "<ul class='list-unstyled'>";
                                 foreach ($events_by_date[$current_date] as $event) {
+                                    $category = isset($event['category']) ? $event['category'] : 'Uncategorized'; // Default if category is null
                                     echo "<li class='badge bg-info mt-1 edit-event' 
-                                         data-id='{$event['id']}' 
-                                         data-title='{$event['title']}' 
-                                         data-date='{$event['date']}'>
-                                        {$event['title']}
-                                      </li>";
+                                          data-id='{$event['id']}' 
+                                          data-title='{$event['title']}' 
+                                          data-date='{$event['date']}' 
+                                          data-category='{$category}'>
+                                          {$event['title']} ({$category})
+                                         </li>";
                                 }
+
                                 echo "</ul>";
                             }
                             echo "</td>";
@@ -122,6 +142,17 @@ while ($event = $result->fetch_assoc()) {
                             <label for="addDate" class="form-label">Date</label>
                             <input type="date" class="form-control" id="addDate" name="date" readonly>
                         </div>
+                        <div class="mb-3">
+                            <label for="addCategory" class="form-label">Category</label>
+                            <select class="form-control" id="addCategory" name="category">
+                                <option value="">-- Select or Add Category --</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="addCustomCategory" placeholder="Add a new category">
+                            <button type="button" class="btn btn-sm btn-primary mt-2" id="addCategoryBtn">Add Category</button>
+                        </div>
+
+
+
                         <button type="submit" class="btn btn-primary">Add Event</button>
                     </form>
                 </div>
@@ -149,6 +180,17 @@ while ($event = $result->fetch_assoc()) {
                             <label for="editDate" class="form-label">Date</label>
                             <input type="date" class="form-control" id="editDate" name="date" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="editCategory" class="form-label">Category</label>
+                            <select class="form-control" id="editCategory" name="category">
+                                <option value="">-- Select or Add Category --</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="editCustomCategory" placeholder="Add a new category">
+                            <button type="button" class="btn btn-sm btn-primary mt-2" id="editCategoryBtn">Add Category</button>
+                        </div>
+
+
+
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
@@ -157,65 +199,7 @@ while ($event = $result->fetch_assoc()) {
     </div>
 
     <script>
-        //     // Show edit modal with event details
-        //     $(document).on('click', '.edit-event', function () {
-        //         const eventId = $(this).data('id');
-        //         const eventTitle = $(this).data('title');
-        //         const eventDate = $(this).data('date');
-
-        //         $('#editEventId').val(eventId);
-        //         $('#editTitle').val(eventTitle);
-        //         $('#editDate').val(eventDate);
-
-        //         $('#editEventModal').modal('show');
-        //     });
-
-        //     // Submit edit form via AJAX
-        //     $('#editEventForm').on('submit', function (e) {
-        //         e.preventDefault();
-        //         $.ajax({
-        //             url: 'edit_event.php',
-        //             type: 'POST',
-        //             data: $(this).serialize(),
-        //             success: function (response) {
-        //                 alert('Event updated successfully!');
-        //                 location.reload();
-        //             },
-        //             error: function () {
-        //                 alert('Failed to update event.');
-        //             }
-        //         });
-        //     });
-
-
-
-
-
-        //     // Open add event modal when clicking an empty cell
-        // $(document).on('click', '.calendar-cell:not(:has(.edit-event))', function () {
-        //     const selectedDate = $(this).data('date');
-        //     $('#addDate').val(selectedDate);
-        //     $('#addEventModal').modal('show');
-        // });
-
-        // // Submit add event form via AJAX
-        // $('#addEventForm').on('submit', function (e) {
-        //     e.preventDefault();
-        //     $.ajax({
-        //         url: 'add_event.php',
-        //         type: 'POST',
-        //         data: $(this).serialize(),
-        //         success: function (response) {
-        //             alert('Event added successfully!');
-        //             location.reload();
-        //         },
-        //         error: function () {
-        //             alert('Failed to add event.');
-        //         }
-        //     });
-        // });
-
-
+    $(document).ready(function() {
         // Open add event modal when clicking a calendar cell
         $(document).on('click', '.calendar-cell', function(e) {
             // Prevent triggering the modal if clicking an individual event
@@ -226,17 +210,18 @@ while ($event = $result->fetch_assoc()) {
             $('#addEventModal').modal('show');
         });
 
-
         // Open edit event modal when clicking an individual event
         $(document).on('click', '.edit-event', function(e) {
-            e.stopPropagation(); // Prevent cell click event from triggering
+            e.stopPropagation();
             const eventId = $(this).data('id');
             const eventTitle = $(this).data('title');
             const eventDate = $(this).data('date');
+            const eventLabel = $(this).data('label');
 
             $('#editEventId').val(eventId);
             $('#editTitle').val(eventTitle);
             $('#editDate').val(eventDate);
+            $('#editLabel').val(eventLabel);
             $('#editEventModal').modal('show');
         });
 
@@ -244,22 +229,20 @@ while ($event = $result->fetch_assoc()) {
         $('#addEventForm').on('submit', function(e) {
             e.preventDefault();
             $.ajax({
-                url: 'add_event.php', // Path to your PHP file
+                url: 'add_event.php',
                 type: 'POST',
                 data: $(this).serialize(),
                 success: function(response) {
-                    console.log(response);
+                    console.log("Response from add_event.php:", response);
                     alert('Event added successfully!');
                     location.reload();
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error: " + xhr.responseText);
+                    console.error("Error adding event:", xhr.responseText);
                     alert('Failed to add event.');
                 }
-
             });
         });
-
 
         // Submit edit event form via AJAX
         $('#editEventForm').on('submit', function(e) {
@@ -269,15 +252,65 @@ while ($event = $result->fetch_assoc()) {
                 type: 'POST',
                 data: $(this).serialize(),
                 success: function(response) {
+                    console.log("Response from edit_event.php:", response);
                     alert('Event updated successfully!');
                     location.reload();
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error("Error updating event:", xhr.responseText);
                     alert('Failed to update event.');
                 }
             });
         });
-    </script>
+
+        // Function to fetch categories
+        function fetchCategories() {
+            $.ajax({
+                url: 'fetch_categories.php',
+                method: 'GET',
+                dataType: 'json', // Expect JSON response
+                success: function(categories) {
+                    console.log("Categories fetched:", categories);
+                    // Populate category dropdowns
+                    $('#addCategory, #editCategory').empty().append('<option value="">-- Select or Add Category --</option>');
+                    categories.forEach(category => {
+                        $('#addCategory, #editCategory').append(`<option value="${category.name}">${category.name}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching categories:", xhr.responseText);
+                    alert('Failed to load categories. Please try again later.');
+                }
+            });
+        }
+
+        // Fetch categories on page load
+        fetchCategories();
+
+        // Add new category
+        $('#addCategoryBtn, #editCategoryBtn').click(function() {
+            const customCategory = $(this).prev('input').val().trim();
+            if (customCategory) {
+                $.ajax({
+                    url: 'add_category.php',
+                    method: 'POST',
+                    data: { name: customCategory },
+                    success: function(response) {
+                        console.log("Category added:", response);
+                        fetchCategories(); // Refresh categories
+                        alert('Category added successfully!');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error adding category:", xhr.responseText);
+                        alert('Error adding category. Make sure it is unique.');
+                    }
+                });
+            } else {
+                alert('Please enter a category name.');
+            }
+        });
+    });
+</script>
 </body>
 
 </html>

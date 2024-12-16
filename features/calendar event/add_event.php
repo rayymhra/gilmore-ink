@@ -48,11 +48,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
     $date = $_POST['date'] ?? '';
     $user_id = $_SESSION['user_id'] ?? null;
+    $category = $_POST['category'] ?? $_POST['customCategory'];
+
 
     // Validate inputs
     if (!empty($title) && !empty($date) && !empty($user_id)) {
-        $query = $conn->prepare("INSERT INTO events (user_id, title, date) VALUES (?, ?, ?)");
-        $query->bind_param("sss", $user_id, $title, $date);
+        $label = $_POST['label'] ?? null;
+
+        $query = $conn->prepare("INSERT INTO events (user_id, title, date, label) VALUES (?, ?, ?, ?)");
+        $query->bind_param("ssss", $user_id, $title, $date, $label);
+
 
         if ($query->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'Event added successfully.']);
@@ -65,6 +70,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
 }
-
-
-
