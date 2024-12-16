@@ -84,51 +84,6 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
             font-family: Arial, sans-serif;
         }
 
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background-color: #f7f7f7;
-            position: fixed;
-            left: 0;
-            top: 0;
-            transition: all 0.3s;
-            overflow: auto;
-            border-right: 1px solid #ddd;
-        }
-
-        .sidebar.collapsed {
-            width: 60px;
-        }
-
-        .sidebar .nav-link {
-            text-align: left;
-            padding-left: 20px;
-        }
-
-        .sidebar.collapsed .nav-link {
-            text-align: center;
-            padding-left: 0;
-        }
-
-        .sidebar .toggle-btn {
-            text-align: right;
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .sidebar.collapsed .toggle-btn {
-            text-align: center;
-        }
-
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: all 0.3s;
-        }
-
-        .content.collapsed {
-            margin-left: 60px;
-        }
 
         .cover-container {
             position: relative;
@@ -158,6 +113,7 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
             align-items: center;
             gap: 10px;
             margin-top: 15px;
+            margin-left: 10px;
         }
 
         .icon-title-container img {
@@ -176,6 +132,42 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
             background: transparent;
             width: 100%;
         }
+
+        .dashboard-content {
+        background-color: #f4f4f9;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+
+    .welcome-heading {
+        font-size: 2rem;
+        color: #2a2a2a;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .intro-text {
+        font-size: 1.2rem;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta {
+        background-color: #fff;
+        padding: 1.2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #AB967D; /* Accent color for visual interest */
+    }
+
+    .cta p {
+        font-size: 1rem;
+        color: #666;
+        line-height: 1.6;
+    }
     </style>
 </head>
 
@@ -213,10 +205,12 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
             <input type="text" id="title" class="editable-title" value="<?php echo htmlspecialchars($title); ?>" onblur="updateTitle()">
         </div>
 
-        <!-- Main Content Area -->
-        <div>
-            <h3>Welcome to your Student Planner!</h3>
-            <p>Customize this dashboard to suit your needs.</p>
+        <div class="dashboard-content">
+            <h3 class="welcome-heading">Welcome to Your Student Planner!</h3>
+            <p class="intro-text">Organize, track, and personalize your academic life with ease. Whether it's assignments, exams, or daily tasks, you’re in control!</p>
+            <div class="cta">
+                <p>Get started by customizing your planner to fit your unique schedule and goals. Stay on top of your responsibilities with ease!</p>
+            </div>
         </div>
     </div>
 
