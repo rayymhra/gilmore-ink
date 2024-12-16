@@ -5,19 +5,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
     $title = $_POST['title'];
     $date = $_POST['date'];
-    $label = $_POST['label'];
-    $category = $_POST['category'] ?? $_POST['customCategory'];
+    $description = $_POST['description']; // Get description from POST data
+    $category = $_POST['category'];
 
+    // Ensure the field exists in the database
+    $query = $conn->prepare("UPDATE events SET title = ?, date = ?, description = ?, category = ? WHERE id = ?");
+    $query->bind_param("sssss", $title, $date, $description, $category, $id);
 
-    // Update the event in the database
-    $stmt = $conn->prepare("UPDATE events SET title = ?, date = ?, label = ? WHERE id = ?");
-    $stmt->bind_param("sssi", $title, $date, $label, $id);
-
-    if ($stmt->execute()) {
+    if ($query->execute()) {
         echo json_encode(["success" => true]);
     } else {
         echo json_encode(["success" => false]);
     }
-    $stmt->close();
+    $query->close();
     exit;
 }
+?>
