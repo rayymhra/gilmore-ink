@@ -13,35 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_note'])) {
     $note_id = !empty($_POST['note_id']) ? intval($_POST['note_id']) : null;
     $title = !empty($_POST['title']) ? $_POST['title'] : null;
     $content = !empty($_POST['content']) ? $_POST['content'] : null;
-    $labels = !empty($_POST['labels']) ? $_POST['labels'] : [];
-    $custom_label = !empty($_POST['custom_label']) ? $_POST['custom_label'] : null;
+    $label = isset($_POST['label']) && $_POST['label'] !== "" ? $_POST['label'] : null; // Single label or null
 
-    // Insert custom label if provided and doesn't exist yet
-    if ($custom_label) {
-        $stmt = $conn->prepare("SELECT id FROM labels WHERE user_id = ? AND name = ?");
-        $stmt->bind_param("is", $user_id, $custom_label);
-        $stmt->execute();
-        $stmt->store_result();
-
-        // If the custom label doesn't exist, insert it
-        if ($stmt->num_rows === 0) {
-            $stmt = $conn->prepare("INSERT INTO labels (user_id, name) VALUES (?, ?)");
-            $stmt->bind_param("is", $user_id, $custom_label);
-            $stmt->execute();
-            $custom_label_id = $stmt->insert_id;
-        } else {
-            $stmt->bind_result($custom_label_id);
-            $stmt->fetch();
-        }
-        $stmt->close();
-
-        // Add custom label to labels array
-        if ($custom_label_id) {
-            $labels[] = $custom_label_id;
-        }
-    }
-
-    // Insert or update the note
+    // Insert note
     if ($note_id) {
         $stmt = $conn->prepare("UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?");
         $stmt->bind_param("ssii", $title, $content, $note_id, $user_id);
@@ -53,29 +27,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_note'])) {
     $note_id = $note_id ?: $conn->insert_id;
     $stmt->close();
 
-    // Update note-label associations
+    // Insert or update note-label association
     $conn->query("DELETE FROM note_labels WHERE note_id = $note_id");
-    foreach ($labels as $label_id) {
+    if ($label) {
         $stmt = $conn->prepare("INSERT INTO note_labels (note_id, label_id) VALUES (?, ?)");
-        $stmt->bind_param("ii", $note_id, $label_id);
+        $stmt->bind_param("ii", $note_id, $label);
         $stmt->execute();
     }
 }
 
 // Fetch notes with labels
 $notes = $conn->query("
-    SELECT n.id, n.title, n.content, GROUP_CONCAT(l.name) AS labels
+    SELECT n.id, n.title, n.content, l.name AS label
     FROM notes n
     LEFT JOIN note_labels nl ON n.id = nl.note_id
     LEFT JOIN labels l ON nl.label_id = l.id
     WHERE n.user_id = $user_id
-    GROUP BY n.id
 ");
 
 // Fetch all labels
 $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
-?>
 
+// Add a new label
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_label'])) {
+    $new_label = !empty($_POST['new_label']) ? $_POST['new_label'] : null;
+
+    if ($new_label) {
+        // Check if the label already exists
+        $stmt = $conn->prepare("SELECT id FROM labels WHERE user_id = ? AND name = ?");
+        $stmt->bind_param("is", $user_id, $new_label);
+        $stmt->execute();
+        $stmt->store_result();
+
+        // If the label doesn't exist, insert it
+        if ($stmt->num_rows === 0) {
+            $stmt = $conn->prepare("INSERT INTO labels (user_id, name) VALUES (?, ?)");
+            $stmt->bind_param("is", $user_id, $new_label);
+            $stmt->execute();
+        }
+        $stmt->close();
+    }
+}
+
+// Delete a label
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_label'])) {
+    $label_id = isset($_POST['label_id']) ? intval($_POST['label_id']) : null;
+
+    if ($label_id) {
+        // Delete the label from the labels table
+        $stmt = $conn->prepare("DELETE FROM labels WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $label_id, $user_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
+// Edit label
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_label'])) {
+    $label_id = isset($_POST['label_id']) ? intval($_POST['label_id']) : null;
+    $new_label_name = isset($_POST['new_label_name']) ? $_POST['new_label_name'] : null;
+
+    if ($label_id && $new_label_name) {
+        $stmt = $conn->prepare("UPDATE labels SET name = ? WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("sii", $new_label_name, $label_id, $user_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -100,7 +119,10 @@ $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
                 <textarea name="content" id="content" class="form-control" placeholder="Your note..."></textarea>
             </div>
             <div class="mb-3">
-                <select name="labels[]" id="labels" class="form-control" multiple>
+                <!-- Single Label Dropdown -->
+                <label for="label" class="form-label">Select Label</label>
+                <select name="label" id="label" class="form-control">
+                    <option value="">None</option> <!-- Allow null selection -->
                     <?php while ($label = $labels->fetch_assoc()) { ?>
                         <option value="<?php echo $label['id']; ?>">
                             <?php echo htmlspecialchars($label['name']); ?>
@@ -108,9 +130,9 @@ $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
                     <?php } ?>
                 </select>
             </div>
-            <div class="mb-3">
+            <!-- <div class="mb-3">
                 <input type="text" name="custom_label" id="custom_label" class="form-control" placeholder="Add a custom label (Optional)">
-            </div>
+            </div> -->
             <button type="submit" name="save_note" class="btn btn-primary">Save Note</button>
         </form>
 
@@ -124,7 +146,7 @@ $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
                             <h5 class="card-title"><?php echo htmlspecialchars($note['title'] ?: "Untitled"); ?></h5>
                             <p class="card-text"><?php echo htmlspecialchars($note['content'] ?? ""); ?></p>
                             <p class="card-text">
-                                <small class="text-muted">Labels: <?php echo htmlspecialchars($note['labels'] ?: "None"); ?></small>
+                                <small class="text-muted">Label: <?php echo htmlspecialchars($note['label'] ?: "None"); ?></small>
                             </p>
                             <button class="btn btn-sm btn-warning edit-note" 
                                     data-note-id="<?php echo $note['id']; ?>" 
@@ -137,6 +159,36 @@ $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
                 </div>
             <?php } ?>
         </div>
+
+        <!-- Label Management Section -->
+        <h2>Manage Your Labels</h2>
+
+        <!-- Add New Label -->
+        <form method="POST" class="mb-4">
+            <div class="mb-3">
+                <input type="text" name="new_label" id="new_label" class="form-control" placeholder="New Label Name" required>
+            </div>
+            <button type="submit" name="add_label" class="btn btn-success">Add Label</button>
+        </form>
+
+        <!-- Edit and Delete Labels -->
+        <h3>Your Labels</h3>
+        <ul class="list-group">
+            <?php
+            // Fetch all labels for the user
+            $label_result = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
+            while ($label = $label_result->fetch_assoc()) { ?>
+                <li class="list-group-item d-flex justify-content-between">
+                    <?php echo htmlspecialchars($label['name']); ?>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="label_id" value="<?php echo $label['id']; ?>">
+                        <input type="text" name="new_label_name" value="<?php echo htmlspecialchars($label['name']); ?>" class="form-control form-control-sm" style="width: 200px; display:inline-block;">
+                        <button type="submit" name="edit_label" class="btn btn-primary btn-sm">Edit</button>
+                        <button type="submit" name="delete_label" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </li>
+            <?php } ?>
+        </ul>
     </div>
 
     <script>
@@ -151,4 +203,3 @@ $labels = $conn->query("SELECT id, name FROM labels WHERE user_id = $user_id");
     </script>
 </body>
 </html>
-
