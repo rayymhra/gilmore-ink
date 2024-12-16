@@ -15,7 +15,6 @@ $last_day = date('Y-m-t', strtotime($first_day));
 $days_in_month = date('t', strtotime($first_day));
 
 // Fetch events for the current month
-// Fetch events for the current month
 $query = $conn->prepare("SELECT * FROM events WHERE user_id = ? AND date BETWEEN ? AND ?");
 $query->bind_param("sss", $user_id, $first_day, $last_day);
 $query->execute();
@@ -30,17 +29,19 @@ while ($event = $result->fetch_assoc()) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar</title>
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="../../assets/style.css">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-<div class="container mt-4">
+    <div class="container mt-4">
         <h1>Calendar - <?php echo date('F Y', strtotime($first_day)); ?></h1>
         <div class="d-flex justify-content-between mb-3">
             <a href="?month=<?php echo $month - 1; ?>&year=<?php echo $year; ?>" class="btn btn-primary">Previous</a>
@@ -81,7 +82,12 @@ while ($event = $result->fetch_assoc()) {
                             if (isset($events_by_date[$current_date])) {
                                 echo "<ul class='list-unstyled'>";
                                 foreach ($events_by_date[$current_date] as $event) {
-                                    echo "<li class='badge bg-info mt-1'>{$event['title']}</li>";
+                                    echo "<li class='badge bg-info mt-1 edit-event' 
+                                         data-id='{$event['id']}' 
+                                         data-title='{$event['title']}' 
+                                         data-date='{$event['date']}'>
+                                        {$event['title']}
+                                      </li>";
                                 }
                                 echo "</ul>";
                             }
@@ -98,33 +104,23 @@ while ($event = $result->fetch_assoc()) {
         </table>
     </div>
 
-    <!-- Modal for Adding Event -->
-    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <!-- Add Event Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="eventModalLabel">Add Event</h5>
+                    <h5 class="modal-title" id="addEventModalLabel">Add Event</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="eventForm">
-                        <input type="hidden" id="eventDate" name="date">
+                    <form id="addEventForm">
                         <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
+                            <label for="addTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="addTitle" name="title" required>
                         </div>
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <select class="form-select" id="category" name="category">
-                                <option value="Work">Work</option>
-                                <option value="Personal">Personal</option>
-                                <option value="Study">Study</option>
-                                <option value="Others">Others</option>
-                            </select>
+                            <label for="addDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="addDate" name="date" readonly>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Event</button>
                     </form>
@@ -133,30 +129,155 @@ while ($event = $result->fetch_assoc()) {
         </div>
     </div>
 
+
+    <!-- Modal for Editing Event -->
+    <div class="modal fade" id="editEventModal" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEventModalLabel">Edit Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEventForm">
+                        <input type="hidden" id="editEventId" name="id">
+                        <div class="mb-3">
+                            <label for="editTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="editTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="editDate" name="date" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Show modal on cell click
-        $('.calendar-cell').on('click', function () {
-            const date = $(this).data('date');
-            $('#eventDate').val(date);
-            $('#eventModal').modal('show');
+        //     // Show edit modal with event details
+        //     $(document).on('click', '.edit-event', function () {
+        //         const eventId = $(this).data('id');
+        //         const eventTitle = $(this).data('title');
+        //         const eventDate = $(this).data('date');
+
+        //         $('#editEventId').val(eventId);
+        //         $('#editTitle').val(eventTitle);
+        //         $('#editDate').val(eventDate);
+
+        //         $('#editEventModal').modal('show');
+        //     });
+
+        //     // Submit edit form via AJAX
+        //     $('#editEventForm').on('submit', function (e) {
+        //         e.preventDefault();
+        //         $.ajax({
+        //             url: 'edit_event.php',
+        //             type: 'POST',
+        //             data: $(this).serialize(),
+        //             success: function (response) {
+        //                 alert('Event updated successfully!');
+        //                 location.reload();
+        //             },
+        //             error: function () {
+        //                 alert('Failed to update event.');
+        //             }
+        //         });
+        //     });
+
+
+
+
+
+        //     // Open add event modal when clicking an empty cell
+        // $(document).on('click', '.calendar-cell:not(:has(.edit-event))', function () {
+        //     const selectedDate = $(this).data('date');
+        //     $('#addDate').val(selectedDate);
+        //     $('#addEventModal').modal('show');
+        // });
+
+        // // Submit add event form via AJAX
+        // $('#addEventForm').on('submit', function (e) {
+        //     e.preventDefault();
+        //     $.ajax({
+        //         url: 'add_event.php',
+        //         type: 'POST',
+        //         data: $(this).serialize(),
+        //         success: function (response) {
+        //             alert('Event added successfully!');
+        //             location.reload();
+        //         },
+        //         error: function () {
+        //             alert('Failed to add event.');
+        //         }
+        //     });
+        // });
+
+
+        // Open add event modal when clicking a calendar cell
+        $(document).on('click', '.calendar-cell', function(e) {
+            // Prevent triggering the modal if clicking an individual event
+            if ($(e.target).hasClass('edit-event')) return;
+
+            const selectedDate = $(this).data('date');
+            $('#addDate').val(selectedDate);
+            $('#addEventModal').modal('show');
         });
 
-        // Submit form via AJAX
-        $('#eventForm').on('submit', function (e) {
+
+        // Open edit event modal when clicking an individual event
+        $(document).on('click', '.edit-event', function(e) {
+            e.stopPropagation(); // Prevent cell click event from triggering
+            const eventId = $(this).data('id');
+            const eventTitle = $(this).data('title');
+            const eventDate = $(this).data('date');
+
+            $('#editEventId').val(eventId);
+            $('#editTitle').val(eventTitle);
+            $('#editDate').val(eventDate);
+            $('#editEventModal').modal('show');
+        });
+
+        // Submit add event form via AJAX
+        $('#addEventForm').on('submit', function(e) {
             e.preventDefault();
             $.ajax({
-                url: 'add_event.php',
+                url: 'add_event.php', // Path to your PHP file
                 type: 'POST',
                 data: $(this).serialize(),
-                success: function (response) {
+                success: function(response) {
+                    console.log(response);
                     alert('Event added successfully!');
                     location.reload();
                 },
-                error: function () {
+                error: function(xhr, status, error) {
+                    console.error("Error: " + xhr.responseText);
                     alert('Failed to add event.');
+                }
+
+            });
+        });
+
+
+        // Submit edit event form via AJAX
+        $('#editEventForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'edit_event.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    alert('Event updated successfully!');
+                    location.reload();
+                },
+                error: function() {
+                    alert('Failed to update event.');
                 }
             });
         });
     </script>
 </body>
+
 </html>
