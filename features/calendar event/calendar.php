@@ -145,10 +145,10 @@ while ($event = $result->fetch_assoc()) {
                         <div class="mb-3">
                             <label for="addCategory" class="form-label">Category</label>
                             <select class="form-control" id="addCategory" name="category">
-                                <option value="">-- Select or Add Category --</option>
+                                <option value="">-- Select Category --</option>
                             </select>
-                            <input type="text" class="form-control mt-2" id="addCustomCategory" placeholder="Add a new category">
-                            <button type="button" class="btn btn-sm btn-primary mt-2" id="addCategoryBtn">Add Category</button>
+                            <!-- <input type="text" class="form-control mt-2" id="addCustomCategory" placeholder="Add a new category"> -->
+                            <!-- <button type="button" class="btn btn-sm btn-primary mt-2" id="addCategoryBtn">Add Category</button> -->
                         </div>
 
 
@@ -183,10 +183,10 @@ while ($event = $result->fetch_assoc()) {
                         <div class="mb-3">
                             <label for="editCategory" class="form-label">Category</label>
                             <select class="form-control" id="editCategory" name="category">
-                                <option value="">-- Select or Add Category --</option>
+                                <option value="">-- Select Category --</option>
                             </select>
-                            <input type="text" class="form-control mt-2" id="editCustomCategory" placeholder="Add a new category">
-                            <button type="button" class="btn btn-sm btn-primary mt-2" id="editCategoryBtn">Add Category</button>
+                            <!-- <input type="text" class="form-control mt-2" id="editCustomCategory" placeholder="Add a new category"> -->
+                            <!-- <button type="button" class="btn btn-sm btn-primary mt-2" id="editCategoryBtn">Add Category</button> -->
                         </div>
 
 
@@ -198,119 +198,375 @@ while ($event = $result->fetch_assoc()) {
         </div>
     </div>
 
+   <!-- Category Management Section -->
+<div class="category-management mt-4">
+    <h5>Manage Categories</h5>
+    
+    <!-- Add New Category -->
+    <button id="add-category-btn" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">Add New Category</button>
+    
+    <!-- Category List (Edit & Delete options) -->
+    <ul id="category-list" class="list-unstyled mt-2">
+        <!-- Categories will be populated here via JS -->
+    </ul>
+</div>
+
+<!-- Modal for Adding a Category -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-group">
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" class="form-control" id="categoryName" name="categoryName" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing a Category -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" role="dialog" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId" name="id">
+                    <div class="form-group">
+                        <label for="editCategoryName">Category Name</label>
+                        <input type="text" class="form-control" id="editCategoryName" name="categoryName" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <script>
-    $(document).ready(function() {
-        // Open add event modal when clicking a calendar cell
-        $(document).on('click', '.calendar-cell', function(e) {
-            // Prevent triggering the modal if clicking an individual event
-            if ($(e.target).hasClass('edit-event')) return;
+        $(document).ready(function() {
+            // Open add event modal when clicking a calendar cell
+            $(document).on('click', '.calendar-cell', function(e) {
+                // Prevent triggering the modal if clicking an individual event
+                if ($(e.target).hasClass('edit-event')) return;
 
-            const selectedDate = $(this).data('date');
-            $('#addDate').val(selectedDate);
-            $('#addEventModal').modal('show');
-        });
-
-        // Open edit event modal when clicking an individual event
-        $(document).on('click', '.edit-event', function(e) {
-            e.stopPropagation();
-            const eventId = $(this).data('id');
-            const eventTitle = $(this).data('title');
-            const eventDate = $(this).data('date');
-            const eventLabel = $(this).data('label');
-
-            $('#editEventId').val(eventId);
-            $('#editTitle').val(eventTitle);
-            $('#editDate').val(eventDate);
-            $('#editLabel').val(eventLabel);
-            $('#editEventModal').modal('show');
-        });
-
-        // Submit add event form via AJAX
-        $('#addEventForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: 'add_event.php',
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function(response) {
-                    console.log("Response from add_event.php:", response);
-                    alert('Event added successfully!');
-                    location.reload();
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error adding event:", xhr.responseText);
-                    alert('Failed to add event.');
-                }
+                const selectedDate = $(this).data('date');
+                $('#addDate').val(selectedDate);
+                $('#addEventModal').modal('show');
             });
-        });
 
-        // Submit edit event form via AJAX
-        $('#editEventForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: 'edit_event.php',
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function(response) {
-                    console.log("Response from edit_event.php:", response);
-                    alert('Event updated successfully!');
-                    location.reload();
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error updating event:", xhr.responseText);
-                    alert('Failed to update event.');
-                }
+            // Open edit event modal when clicking an individual event
+            $(document).on('click', '.edit-event', function(e) {
+                e.stopPropagation();
+                const eventId = $(this).data('id');
+                const eventTitle = $(this).data('title');
+                const eventDate = $(this).data('date');
+                const eventLabel = $(this).data('label');
+
+                $('#editEventId').val(eventId);
+                $('#editTitle').val(eventTitle);
+                $('#editDate').val(eventDate);
+                $('#editLabel').val(eventLabel);
+                $('#editEventModal').modal('show');
             });
-        });
 
-        // Function to fetch categories
-        function fetchCategories() {
-            $.ajax({
-                url: 'fetch_categories.php',
-                method: 'GET',
-                dataType: 'json', // Expect JSON response
-                success: function(categories) {
-                    console.log("Categories fetched:", categories);
-                    // Populate category dropdowns
-                    $('#addCategory, #editCategory').empty().append('<option value="">-- Select or Add Category --</option>');
-                    categories.forEach(category => {
-                        $('#addCategory, #editCategory').append(`<option value="${category.name}">${category.name}</option>`);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching categories:", xhr.responseText);
-                    alert('Failed to load categories. Please try again later.');
-                }
-            });
-        }
-
-        // Fetch categories on page load
-        fetchCategories();
-
-        // Add new category
-        $('#addCategoryBtn, #editCategoryBtn').click(function() {
-            const customCategory = $(this).prev('input').val().trim();
-            if (customCategory) {
+            // Submit add event form via AJAX
+            $('#addEventForm').on('submit', function(e) {
+                e.preventDefault();
                 $.ajax({
-                    url: 'add_category.php',
-                    method: 'POST',
-                    data: { name: customCategory },
+                    url: 'add_event.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
                     success: function(response) {
-                        console.log("Category added:", response);
-                        fetchCategories(); // Refresh categories
-                        alert('Category added successfully!');
+                        console.log("Response from add_event.php:", response);
+                        alert('Event added successfully!');
+                        location.reload();
                     },
                     error: function(xhr, status, error) {
-                        console.error("Error adding category:", xhr.responseText);
-                        alert('Error adding category. Make sure it is unique.');
+                        console.error("Error adding event:", xhr.responseText);
+                        alert('Failed to add event.');
                     }
                 });
-            } else {
-                alert('Please enter a category name.');
+            });
+
+            // Submit edit event form via AJAX
+            $('#editEventForm').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: 'edit_event.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        console.log("Response from edit_event.php:", response);
+                        alert('Event updated successfully!');
+                        location.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating event:", xhr.responseText);
+                        alert('Failed to update event.');
+                    }
+                });
+            });
+
+//             // Function to fetch categories
+//             function fetchCategories() {
+//     $.ajax({
+//         url: 'fetch_categories.php',
+//         method: 'GET',
+//         success: function(response) {
+//             console.log(response); // The response should now contain id and name
+//             const categories = response;
+//             const categoryList = $('#category-list');
+//             categoryList.empty(); // Clear previous categories
+
+//             categories.forEach(function(category) {
+//                 categoryList.append(`
+//                     <li>
+//                         <span class="category-name">${category.name}</span>
+//                         <button class="edit-category-btn btn btn-link" data-id="${category.id}">Edit</button>
+//                         <button class="delete-category-btn btn btn-link text-danger" data-id="${category.id}">Delete</button>
+//                     </li>
+//                 `);
+//             });
+//         },
+//         error: function(xhr, status, error) {
+//             console.error("Error fetching categories:", xhr.responseText);
+//         }
+//     });
+// }
+
+
+
+//             // Fetch categories on page load
+//             fetchCategories();
+
+//             // Add New Category
+//             $('#add-category-btn').on('click', function() {
+//                 const newCategoryName = prompt("Enter New Category Name:");
+//                 if (newCategoryName) {
+//                     $.ajax({
+//                         url: 'add_category.php',
+//                         method: 'POST',
+//                         data: {
+//                             name: newCategoryName
+//                         },
+//                         success: function(response) {
+//                             alert(response);
+//                             fetchCategories(); // Refresh category list
+//                         },
+//                         error: function(xhr, status, error) {
+//                             console.error("Error adding category:", xhr.responseText);
+//                         }
+//                     });
+//                 }
+//             });
+
+    
+
+//             // Edit Category
+//             $(document).on('click', '.edit-category-btn', function() {
+//     const categoryId = $(this).data('id');
+//     const categoryName = $(this).siblings('.category-name').text();
+//     const newCategoryName = prompt("Edit Category Name:", categoryName);
+
+//     if (newCategoryName && newCategoryName !== categoryName) {
+//         $.ajax({
+//             url: 'edit_category.php',
+//             method: 'POST',
+//             data: {
+//                 id: categoryId,
+//                 name: newCategoryName
+//             },
+//             success: function(response) {
+//                 alert(response);
+//                 fetchCategories(); // Refresh category list
+//             },
+//             error: function(xhr, status, error) {
+//                 console.error("Error editing category:", xhr.responseText);
+//             }
+//         });
+//     }
+// });
+
+
+//             // Delete Category
+//             $(document).on('click', '.delete-category-btn', function() {
+//     const categoryId = $(this).data('id');
+
+//     const confirmation = confirm("Are you sure you want to delete this category?");
+//     if (confirmation) {
+//         $.ajax({
+//             url: 'delete_category.php',
+//             method: 'POST',
+//             data: {
+//                 id: categoryId
+//             },
+//             success: function(response) {
+//                 alert(response);
+//                 fetchCategories(); // Refresh category list
+//             },
+//             error: function(xhr, status, error) {
+//                 console.error("Error deleting category:", xhr.responseText);
+//             }
+//         });
+//     }
+// });
+
+//         });
+
+
+
+
+//         // For debugging
+// $.ajax({
+//     url: 'edit_category.php',
+//     method: 'POST',
+//     data: {
+//         id: categoryId,
+//         name: newCategoryName
+//     },
+//     success: function(response) {
+//         console.log(response); // Log the response to debug
+//         alert(response);
+//         fetchCategories(); // Refresh category list
+//     },
+//     error: function(xhr, status, error) {
+//         console.error("Error editing category:", xhr.responseText);
+//     }
+});
+
+    </script>
+
+<script>
+       $(document).ready(function() {
+    // Function to fetch categories
+    function fetchCategories() {
+        $.ajax({
+            url: 'fetch_categories.php',
+            method: 'GET',
+            success: function(response) {
+                const categories = JSON.parse(response);
+                const categoryList = $('#category-list');
+                categoryList.empty(); // Clear previous categories
+
+                categories.forEach(function(category) {
+                    categoryList.append(`
+                        <li>
+                            <span class="category-name">${category.name}</span>
+                            <button class="edit-category-btn btn btn-link" data-id="${category.id}" data-name="${category.name}">Edit</button>
+                            <button class="delete-category-btn btn btn-link text-danger" data-id="${category.id}">Delete</button>
+                        </li>
+                    `);
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching categories:", xhr.responseText);
+            }
+        });
+    }
+
+    // Fetch categories on page load
+    fetchCategories();
+
+    // Add New Category
+    $('#add-category-btn').on('click', function() {
+        $('#addCategoryModal').modal('show');
+    });
+
+    // Submit Add Category form via AJAX
+    $('#addCategoryForm').on('submit', function(e) {
+        e.preventDefault();
+        const categoryName = $('#categoryName').val();
+
+        if (!categoryName.trim()) {
+            alert('Category name cannot be empty!');
+            return;
+        }
+
+        $.ajax({
+            url: 'add_category.php',
+            method: 'POST',
+            data: { name: categoryName },
+            success: function(response) {
+                console.log('Category added successfully:', response);
+                alert('Category added successfully!');
+                $('#addCategoryModal').modal('hide');
+                fetchCategories(); // Refresh category list
+            },
+            error: function(xhr, status, error) {
+                console.error("Error adding category:", xhr.responseText);
+                alert('Failed to add category.');
             }
         });
     });
-</script>
+
+    // Edit Category
+    $(document).on('click', '.edit-category-btn', function() {
+        const categoryId = $(this).data('id');
+        const categoryName = $(this).data('name');
+        $('#editCategoryId').val(categoryId);
+        $('#editCategoryName').val(categoryName);
+        $('#editCategoryModal').modal('show');
+    });
+
+    // Submit Edit Category form via AJAX
+    $('#editCategoryForm').on('submit', function(e) {
+        e.preventDefault();
+        const categoryId = $('#editCategoryId').val();
+        const categoryName = $('#editCategoryName').val();
+
+        $.ajax({
+            url: 'edit_category.php',
+            method: 'POST',
+            data: { id: categoryId, categoryName: categoryName },
+            success: function(response) {
+                alert('Category updated successfully!');
+                $('#editCategoryModal').modal('hide');
+                fetchCategories(); // Refresh category list
+            },
+            error: function(xhr, status, error) {
+                console.error("Error editing category:", xhr.responseText);
+            }
+        });
+    });
+
+    // Delete Category
+    $(document).on('click', '.delete-category-btn', function() {
+        const categoryId = $(this).data('id');
+        if (confirm('Are you sure you want to delete this category?')) {
+            $.ajax({
+                url: 'delete_category.php',
+                method: 'POST',
+                data: { id: categoryId },
+                success: function(response) {
+                    alert('Category deleted successfully!');
+                    fetchCategories(); // Refresh category list
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error deleting category:", xhr.responseText);
+                }
+            });
+        }
+    });
+});
+
+    </script>
 </body>
 
 </html>
