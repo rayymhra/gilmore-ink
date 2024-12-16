@@ -125,9 +125,9 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a class="nav-link" href="features/habit.php">
+            <a class="nav-link" href="features/calendar event/calendar.php">
                 <i class="fas fa-tasks"></i>
-                <span>Habit Tracker</span>
+                <span>Calendar</span>
             </a>
             <a class="nav-link" href="#">
                 <i class="fas fa-calendar-alt"></i>
