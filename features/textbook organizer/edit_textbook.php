@@ -9,10 +9,11 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Fetch book details for editing
+$book = null;
 if (isset($_GET['id'])) {
     $book_id = $_GET['id'];
 
-    // Fetch book details
     $stmt = $conn->prepare("SELECT * FROM books WHERE id = ? AND user_id = ?");
     $stmt->bind_param("ii", $book_id, $user_id);
     $stmt->execute();
@@ -27,7 +28,53 @@ if (isset($_GET['id'])) {
     echo "No book ID provided.";
     exit;
 }
+
+// Fetch categories for the dropdown
+$categories = [];
+$stmt = $conn->prepare("SELECT * FROM book_categories WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($category = $result->fetch_assoc()) {
+    $categories[] = $category;
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $label = isset($_POST['label']) ? $_POST['label'] : $book['label']; // Use current label if none selected
+    $link = $_POST['link'];
+    $pdf_path = $book['pdf_path']; // Default to existing value
+    $cover_path = $book['cover_path']; // Default to existing value
+
+    // Process PDF upload
+    if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
+        $pdf_path = "uploads/" . basename($_FILES['pdf']['name']);
+        move_uploaded_file($_FILES['pdf']['tmp_name'], $pdf_path);
+    }
+
+    // Process Cover upload
+    if (isset($_FILES['cover']) && $_FILES['cover']['error'] === UPLOAD_ERR_OK) {
+        $cover_path = "uploads/" . basename($_FILES['cover']['name']);
+        move_uploaded_file($_FILES['cover']['tmp_name'], $cover_path);
+    }
+
+    // Update the book record
+    $stmt = $conn->prepare("UPDATE books SET title = ?, description = ?, label = ?, link = ?, pdf_path = ?, cover_path = ? WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ssssssii", $title, $description, $label, $link, $pdf_path, $cover_path, $book_id, $user_id);
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        header("Location: textbooks.php");
+        exit;
+    } else {
+        echo "Error updating book or no changes were made.";
+    }
+}
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +89,7 @@ if (isset($_GET['id'])) {
 <body>
     <div class="container mt-4">
         <h2>Edit Book</h2>
-        <form action="edit_textbooks.php?book_id=<?php echo $book['id']; ?>" method="POST" enctype="multipart/form-data">
+        <form action="edit_textbook.php?id=<?php echo $book['id']; ?>" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="title" class="form-label">Title</label>
                 <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($book['title'], ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -52,8 +99,17 @@ if (isset($_GET['id'])) {
                 <textarea class="form-control" id="description" name="description"><?php echo htmlspecialchars($book['description'], ENT_QUOTES, 'UTF-8'); ?></textarea>
             </div>
             <div class="mb-3">
-                <label for="label" class="form-label">Label/Subject</label>
-                <input type="text" class="form-control" id="label" name="label" value="<?php echo htmlspecialchars($book['label'], ENT_QUOTES, 'UTF-8'); ?>">
+                <label for="label" class="form-label">Category</label>
+                <select class="form-select" id="label" name="label" required>
+                    <option value="" <?php echo (empty($book['label']) ? 'selected' : ''); ?>>Select Category</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            <?php echo ($book['label'] === $category['name']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
             </div>
             <div class="mb-3">
                 <label for="link" class="form-label">Book Link</label>

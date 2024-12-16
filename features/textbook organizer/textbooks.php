@@ -14,6 +14,13 @@ $stmt->execute();
 $result = $stmt->get_result();
 $books = $result->fetch_all(MYSQLI_ASSOC);
 
+// Fetch categories for the dropdown
+$stmt = $conn->prepare("SELECT * FROM book_categories WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$categories_result = $stmt->get_result();
+$categories = $categories_result->fetch_all(MYSQLI_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,6 +30,9 @@ $books = $result->fetch_all(MYSQLI_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Books</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
 
 <body>
@@ -57,6 +67,56 @@ $books = $result->fetch_all(MYSQLI_ASSOC);
             <?php endforeach; ?>
         </div>
     </div>
+    <div class="container mt-4">
+        <h2>Manage Book Categories</h2>
+        <form action="add_category.php" method="POST">
+            <div class="mb-3">
+                <label for="category_name" class="form-label">New Category Name</label>
+                <input type="text" class="form-control" id="category_name" name="category_name" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Category</button>
+        </form>
+
+        <h4 class="mt-4">Your Categories</h4>
+        <ul class="list-group">
+            <?php foreach ($categories as $category): ?>
+                <li class="list-group-item">
+                    <?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>
+                    <!-- Edit Button Trigger Modal -->
+                    <button type="button" class="btn btn-warning btn-sm ml-2" data-bs-toggle="modal" data-bs-target="#editCategoryModal<?php echo $category['id']; ?>">
+                        Edit
+                    </button>
+                    <!-- Delete Button -->
+                    <a href="delete_category.php?id=<?php echo $category['id']; ?>" class="btn btn-danger btn-sm ml-2" onclick="return confirm('Are you sure you want to delete this category?')">Delete</a>
+
+                    <!-- Edit Category Modal -->
+                    <div class="modal fade" id="editCategoryModal<?php echo $category['id']; ?>" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="edit_category.php" method="POST">
+                                        <div class="mb-3">
+                                            <label for="category_name" class="form-label">Category Name</label>
+                                            <input type="text" class="form-control" id="category_name" name="category_name" value="<?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>" required>
+                                            <input type="hidden" name="category_id" value="<?php echo $category['id']; ?>">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+
+
+    </div>
+
 </body>
 
 </html>

@@ -2,6 +2,14 @@
 include "../../includes/koneksi.php";
 session_start();
 
+if (!isset($_SESSION['user_id'])) {
+    echo "User not logged in.";
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
@@ -55,70 +63,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo "Book added successfully!";
     exit;
 }
+
+// Fetch categories for the dropdown
+$categories = [];
+$stmt = $conn->prepare("SELECT * FROM book_categories WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($category = $result->fetch_assoc()) {
+    $categories[] = $category;
+}
+
+
+
 ?>
 
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TextBooks Organizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-<div class="container mt-4">
-    <h2>Add a Book</h2>
-    <form id="bookForm" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="title" class="form-label">Title</label>
-            <input type="text" class="form-control" id="title" name="title" required>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description"></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="label" class="form-label">Label/Subject</label>
-            <input type="text" class="form-control" id="label" name="label">
-        </div>
-        <div class="mb-3">
-            <label for="link" class="form-label">Book Link</label>
-            <input type="url" class="form-control" id="link" name="link">
-        </div>
-        <div class="mb-3">
-            <label for="pdf" class="form-label">Upload PDF</label>
-            <input type="file" class="form-control" id="pdf" name="pdf" accept="application/pdf">
-        </div>
-        <div class="mb-3">
-            <label for="cover" class="form-label">Book Cover</label>
-            <input type="file" class="form-control" id="cover" name="cover" accept="image/*">
-        </div>
-        <button type="submit" class="btn btn-primary">Add Book</button>
-    </form>
-</div>
+    <div class="container mt-4">
+        <h2>Add a Book</h2>
+        <form id="bookForm" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="label" required>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            <?php echo isset($book) && $book['label'] == $category['name'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="link" class="form-label">Book Link</label>
+                <input type="url" class="form-control" id="link" name="link">
+            </div>
+            <div class="mb-3">
+                <label for="pdf" class="form-label">Upload PDF</label>
+                <input type="file" class="form-control" id="pdf" name="pdf" accept="application/pdf">
+            </div>
+            <div class="mb-3">
+                <label for="cover" class="form-label">Book Cover</label>
+                <input type="file" class="form-control" id="cover" name="cover" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Book</button>
+        </form>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
-<script>
-    $('#bookForm').on('submit', function(e) {
-        e.preventDefault();
-        let formData = new FormData(this);
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script>
+        $('#bookForm').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
 
-        $.ajax({
-            url: 'add_textbooks.php', // Same file handling the request
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                alert('Book added successfully!');
-                location.reload();
-            },
-            error: function(xhr) {
-                alert('Failed to add book: ' + xhr.responseText);
-            }
+            $.ajax({
+                url: 'add_textbooks.php', // Same file handling the request
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('Book added successfully!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Failed to add book: ' + xhr.responseText);
+                }
+            });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>
