@@ -40,16 +40,112 @@ while ($event = $result->fetch_assoc()) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
+        .calendar-cell .badge {
+            display: block;
+            margin-top: 5px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2rem;
+        }
+
+        /* Calendar */
+        .table {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #D3C8BB;
+        }
+
+        .table th {
+            background-color: #BFAF9C;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .calendar-cell {
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .calendar-cell:hover {
+            background-color: #F9F4F0;
+        }
+
+        .calendar-cell strong {
+            font-size: 1.1rem;
+            color: #A1896E;
+        }
+
+        .badge .bg-info {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background-color: #AB967D !important;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .bg-info {
+            background-color: #AB967D !important;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: #AB967D;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #A1896E;
+        }
+
+        /* Modals */
+        .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-shadow: none;
+        }
+
+
+
         .sidebar {
             width: 250px;
             height: 100vh;
-            background-color: #f4f4f9; /* Lighter neutral background */
+            background-color: #f4f4f9;
+            /* Lighter neutral background */
             position: fixed;
             top: 0;
             left: 0;
             transition: all 0.3s;
             overflow-y: auto;
-            border-right: 1px solid #e0e0e0; /* Light border for subtle separation */
+            border-right: 1px solid #e0e0e0;
+            /* Light border for subtle separation */
         }
 
         .sidebar.collapsed {
@@ -61,8 +157,10 @@ while ($event = $result->fetch_assoc()) {
             text-align: center;
             cursor: pointer;
             padding: 1rem;
-            background-color: #dcdcdc; /* Subtle gray background */
-            color: #333; /* Darker text for contrast */
+            background-color: #dcdcdc;
+            /* Subtle gray background */
+            color: #333;
+            /* Darker text for contrast */
             border-bottom: 1px solid #e0e0e0;
         }
 
@@ -88,7 +186,8 @@ while ($event = $result->fetch_assoc()) {
             padding: 0.8rem 1rem;
             font-size: 1rem;
             font-weight: 500;
-            color: #555; /* Neutral dark gray */
+            color: #555;
+            /* Neutral dark gray */
             text-decoration: none;
             transition: background-color 0.3s, color 0.3s;
         }
@@ -98,13 +197,17 @@ while ($event = $result->fetch_assoc()) {
         }
 
         .nav-link:hover {
-            background-color: #e0e0e0; /* Light hover effect */
-            color: #333; /* Dark text on hover */
+            background-color: #e0e0e0;
+            /* Light hover effect */
+            color: #333;
+            /* Dark text on hover */
         }
 
         .nav-link.active {
-            background-color: #dcdcdc; /* Active link with subtle gray */
-            color: #333; /* Dark text for active link */
+            background-color: #dcdcdc;
+            /* Active link with subtle gray */
+            color: #333;
+            /* Dark text for active link */
         }
 
         .sidebar.collapsed .nav-link {
@@ -143,7 +246,8 @@ while ($event = $result->fetch_assoc()) {
 </head>
 
 <body>
-    <?php //include '../../includes/sidebar.php'; ?>
+    <?php //include '../../includes/sidebar.php'; 
+    ?>
     <div class="sidebar" id="sidebar">
         <div class="toggle-btn" onclick="">Gilmore Ink</div>
         <nav class="nav flex-column">
@@ -151,17 +255,33 @@ while ($event = $result->fetch_assoc()) {
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a class="nav-link active" href="features/calendar event/calendar.php">
+            <a class="nav-link active" href="">
+                <i class="fas fa-calendar"></i>
+                <span>Calendar</span>
+            </a>
+            <a class="nav-link" href="../weekly to-do/weekly.php">
                 <i class="fas fa-tasks"></i>
-                <span>Calendar</span>
+                <span>Weekly To-do</span>
             </a>
-            <a class="nav-link" href="#">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Calendar</span>
-            </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="../notes/notes.php">
                 <i class="fas fa-sticky-note"></i>
                 <span>Notes</span>
+            </a>
+            <a class="nav-link" href="../textbook organizer/textbooks.php">
+                <i class="fas fa-book-open"></i>
+                <span>Textbooks Manager</span>
+            </a>
+            <a class="nav-link" href="../tracker/assignment.php">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Assignments Tracker</span>
+            </a>
+            <a class="nav-link" href="../tracker/money.php">
+                <i class="fas fa-wallet"></i>
+                <span>Budget Tracker</span>
+            </a>
+            <a class="nav-link" href="../tracker/pomodoro.php">
+                <i class="fas fa-hourglass-start"></i>
+                <span>Pomodoro Timer</span>
             </a>
         </nav>
     </div>
@@ -400,6 +520,8 @@ while ($event = $result->fetch_assoc()) {
             });
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </body>
 
 </html>

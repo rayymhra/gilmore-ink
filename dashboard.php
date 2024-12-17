@@ -168,6 +168,48 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
         color: #666;
         line-height: 1.6;
     }
+
+    .btn-add-new {
+            display: inline-block;
+            padding: 0.8rem 1.2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #A1896E;
+            /* Use your color palette for text */
+            background-color: #E7E1DA;
+            /* Subtle off-white background */
+            border: 1px solid #D3C8BB;
+            /* Light border */
+            border-radius: 8px;
+            /* Rounded corners */
+            text-decoration: none;
+            /* Remove underline */
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            margin-left: 30px;
+        }
+
+        .btn-add-new:hover {
+            color: #fff;
+            /* White text on hover */
+            background-color: #A1896E;
+            /* Darker background on hover */
+            border-color: #A1896E;
+            /* Border color matches the background */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* Add subtle shadow */
+        }
+
+        .btn-add-new:active {
+            transform: scale(0.98);
+            /* Slightly shrink on click for effect */
+        }
+
+        .btn-add-new:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(161, 152, 110, 0.4);
+            /* Focus outline with a soft glow */
+        }
     </style>
 </head>
 
@@ -212,6 +254,8 @@ $icon_path = $dashboard['icon_path'] ?? $default_icon;
                 <p>Get started by customizing your planner to fit your unique schedule and goals. Stay on top of your responsibilities with ease!</p>
             </div>
         </div>
+
+        <a href="logout.php" class="btn-add-new">Logout</a>
     </div>
 
     <script>

@@ -121,21 +121,37 @@
     <div class="sidebar" id="sidebar">
         <div class="toggle-btn" onclick="">Gilmore Ink</div>
         <nav class="nav flex-column">
-            <a class="nav-link active" href="#">
+            <a class="nav-link active" href="">
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
             <a class="nav-link" href="features/calendar event/calendar.php">
+                <i class="fas fa-calendar"></i>
+                <span>Calendar</span>
+            </a>
+            <a class="nav-link" href="features/weekly to-do/weekly.php">
                 <i class="fas fa-tasks"></i>
-                <span>Calendar</span>
+                <span>Weekly To-do</span>
             </a>
-            <a class="nav-link" href="#">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Calendar</span>
-            </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="features/notes/notes.php">
                 <i class="fas fa-sticky-note"></i>
                 <span>Notes</span>
+            </a>
+            <a class="nav-link" href="features/textbook organizer/textbooks.php">
+                <i class="fas fa-book-open"></i>
+                <span>Textbooks Manager</span>
+            </a>
+            <a class="nav-link" href="features/tracker/assignment.php">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Assignments Tracker</span>
+            </a>
+            <a class="nav-link" href="features/tracker/money.php">
+                <i class="fas fa-wallet"></i>
+                <span>Budget Tracker</span>
+            </a>
+            <a class="nav-link" href="features/tracker/pomodoro.php">
+                <i class="fas fa-hourglass-start"></i>
+                <span>Pomodoro Timer</span>
             </a>
         </nav>
     </div>
